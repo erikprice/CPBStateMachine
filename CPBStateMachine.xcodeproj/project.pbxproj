@@ -15,6 +15,9 @@
 		C7C7BA671539C4B30005E8E3 /* libCPBStateMachine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C7C7BA4F1539C4B30005E8E3 /* libCPBStateMachine.a */; };
 		C7C7BA6D1539C4B30005E8E3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C7C7BA6B1539C4B30005E8E3 /* InfoPlist.strings */; };
 		C7C7BA701539C4B30005E8E3 /* CPBStateMachineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C7C7BA6F1539C4B30005E8E3 /* CPBStateMachineTests.m */; };
+		C7C7BA801539C5E80005E8E3 /* CPBStateMachineEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = C7C7BA7E1539C5E80005E8E3 /* CPBStateMachineEvent.m */; };
+		C7C7BA811539C5E80005E8E3 /* CPBStateMachineEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = C7C7BA7E1539C5E80005E8E3 /* CPBStateMachineEvent.m */; };
+		C7C7BA861539C7AB0005E8E3 /* CPBStateMachine.m in Sources */ = {isa = PBXBuildFile; fileRef = C7C7BA581539C4B30005E8E3 /* CPBStateMachine.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,16 +33,17 @@
 /* Begin PBXFileReference section */
 		C7C7BA4F1539C4B30005E8E3 /* libCPBStateMachine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCPBStateMachine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7C7BA521539C4B30005E8E3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		C7C7BA561539C4B30005E8E3 /* CPBStateMachine-Prefix.pch */ = {isa = PBXFileReference; path = "CPBStateMachine-Prefix.pch"; sourceTree = "<group>"; };
-		C7C7BA571539C4B30005E8E3 /* CPBStateMachine.h */ = {isa = PBXFileReference; path = CPBStateMachine.h; sourceTree = "<group>"; };
+		C7C7BA561539C4B30005E8E3 /* CPBStateMachine-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CPBStateMachine-Prefix.pch"; sourceTree = "<group>"; };
+		C7C7BA571539C4B30005E8E3 /* CPBStateMachine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPBStateMachine.h; sourceTree = "<group>"; };
 		C7C7BA581539C4B30005E8E3 /* CPBStateMachine.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPBStateMachine.m; sourceTree = "<group>"; };
 		C7C7BA5F1539C4B30005E8E3 /* CPBStateMachineTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CPBStateMachineTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7C7BA601539C4B30005E8E3 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
 		C7C7BA621539C4B30005E8E3 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		C7C7BA6A1539C4B30005E8E3 /* CPBStateMachineTests-Info.plist */ = {isa = PBXFileReference; path = "CPBStateMachineTests-Info.plist"; sourceTree = "<group>"; };
+		C7C7BA6A1539C4B30005E8E3 /* CPBStateMachineTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CPBStateMachineTests-Info.plist"; sourceTree = "<group>"; };
 		C7C7BA6C1539C4B30005E8E3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		C7C7BA6E1539C4B30005E8E3 /* CPBStateMachineTests.h */ = {isa = PBXFileReference; path = CPBStateMachineTests.h; sourceTree = "<group>"; };
 		C7C7BA6F1539C4B30005E8E3 /* CPBStateMachineTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPBStateMachineTests.m; sourceTree = "<group>"; };
+		C7C7BA7D1539C5E80005E8E3 /* CPBStateMachineEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CPBStateMachineEvent.h; sourceTree = "<group>"; };
+		C7C7BA7E1539C5E80005E8E3 /* CPBStateMachineEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CPBStateMachineEvent.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,8 +72,8 @@
 		C7C7BA441539C4B30005E8E3 = {
 			isa = PBXGroup;
 			children = (
-				C7C7BA541539C4B30005E8E3 /* CPBStateMachine */,
-				C7C7BA681539C4B30005E8E3 /* CPBStateMachineTests */,
+				C7C7BA541539C4B30005E8E3 /* Source */,
+				C7C7BA681539C4B30005E8E3 /* Tests */,
 				C7C7BA511539C4B30005E8E3 /* Frameworks */,
 				C7C7BA501539C4B30005E8E3 /* Products */,
 			);
@@ -94,13 +98,16 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		C7C7BA541539C4B30005E8E3 /* CPBStateMachine */ = {
+		C7C7BA541539C4B30005E8E3 /* Source */ = {
 			isa = PBXGroup;
 			children = (
 				C7C7BA571539C4B30005E8E3 /* CPBStateMachine.h */,
 				C7C7BA581539C4B30005E8E3 /* CPBStateMachine.m */,
+				C7C7BA7D1539C5E80005E8E3 /* CPBStateMachineEvent.h */,
+				C7C7BA7E1539C5E80005E8E3 /* CPBStateMachineEvent.m */,
 				C7C7BA551539C4B30005E8E3 /* Supporting Files */,
 			);
+			name = Source;
 			path = CPBStateMachine;
 			sourceTree = "<group>";
 		};
@@ -112,13 +119,13 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		C7C7BA681539C4B30005E8E3 /* CPBStateMachineTests */ = {
+		C7C7BA681539C4B30005E8E3 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				C7C7BA6E1539C4B30005E8E3 /* CPBStateMachineTests.h */,
 				C7C7BA6F1539C4B30005E8E3 /* CPBStateMachineTests.m */,
 				C7C7BA691539C4B30005E8E3 /* Supporting Files */,
 			);
+			name = Tests;
 			path = CPBStateMachineTests;
 			sourceTree = "<group>";
 		};
@@ -239,6 +246,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C7C7BA591539C4B30005E8E3 /* CPBStateMachine.m in Sources */,
+				C7C7BA801539C5E80005E8E3 /* CPBStateMachineEvent.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +255,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C7C7BA701539C4B30005E8E3 /* CPBStateMachineTests.m in Sources */,
+				C7C7BA811539C5E80005E8E3 /* CPBStateMachineEvent.m in Sources */,
+				C7C7BA861539C7AB0005E8E3 /* CPBStateMachine.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,6 +395,7 @@
 				C7C7BA751539C4B30005E8E3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C7C7BA761539C4B30005E8E3 /* Build configuration list for PBXNativeTarget "CPBStateMachineTests" */ = {
 			isa = XCConfigurationList;
@@ -393,6 +404,7 @@
 				C7C7BA781539C4B30005E8E3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
