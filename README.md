@@ -1,6 +1,11 @@
-h1. CPBStateMachine
+CPBStateMachine
+===============
+
 CPBStateMachine is a simple library for implementing a finite state machine in Objective-C.
 
-h2. Instructions
-*TODO* - add instructions and a quick example. For now, see CPBStateMachineTests.m .
+Instructions
+------------
+**TODO** - add instructions and a quick example. For now, see the [unit tests][tests].
+
+[tests]: https://github.com/erikprice/CPBStateMachine/blob/master/CPBStateMachineTests/CPBStateMachineTests.m
 
