@@ -255,7 +255,7 @@
 
 - (CPBStateMachineEvent *)eventWithName:(NSString *)eventName
 {
-    CPBStateMachineEvent *event = [[CPBStateMachineEvent alloc] init];
+    CPBStateMachineEvent *event = [[[CPBStateMachineEvent alloc] init] autorelease];
     event.eventName = eventName;
     event.stateMachine = self;
     
@@ -264,7 +264,7 @@
 
 - (CPBStateMachineEvent *)eventWithName:(NSString *)eventName context:(id)context
 {
-    CPBStateMachineEvent *event = [[CPBStateMachineEvent alloc] init];
+    CPBStateMachineEvent *event = [[[CPBStateMachineEvent alloc] init] autorelease];
     event.context = context;
     event.eventName = eventName;
     event.stateMachine = self;
