@@ -210,7 +210,7 @@
         action(smEvent, oldState, newState);
     }
     
-    for (NSInvocation *action in [self.actionsByLeavingState objectForKey:oldState])
+    for (NSInvocation *action in [self.leavingStateInvocations objectForKey:oldState])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
         [action setArgument:smEvent atIndex:2];
@@ -227,7 +227,7 @@
         action(smEvent, oldState, newState);
     }
     
-    for (NSInvocation *action in [self.actionsByEnteringState objectForKey:newState])
+    for (NSInvocation *action in [self.enteringStateInvocations objectForKey:newState])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
         [action setArgument:smEvent atIndex:2];
@@ -242,7 +242,7 @@
         action(smEvent, oldState, newState);
     }
     
-    for (NSInvocation *action in [self.actionsByAfterEvent objectForKey:eventName])
+    for (NSInvocation *action in [self.afterEventInvocations objectForKey:eventName])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
         [action setArgument:smEvent atIndex:2];

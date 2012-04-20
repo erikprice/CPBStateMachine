@@ -292,6 +292,198 @@ static NSString * const kStateD = @"stateD";
     STAssertFalse(actionCalled, nil);
 }
 
+- (void)testDispatchEvent_EventPromptsStateTransition_LeaveStateActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } leavingState:kStateA];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } leavingState:kStateA];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_EnterStateActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } enteringState:kStateB];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } enteringState:kStateB];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_BeforeEventActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } beforeEvent:kEvent0];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } beforeEvent:kEvent0];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_AfterEventActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } afterEvent:kEvent0];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } afterEvent:kEvent0];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_LeaveStateActionsNotCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } leavingState:kStateB];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } leavingState:kStateA];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    STAssertFalse(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_EnterStateActionsNotCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } enteringState:kStateB];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } enteringState:kStateC];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    STAssertFalse(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_BeforeEventActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } beforeEvent:kEvent1];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } beforeEvent:kEvent0];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertFalse(action0Called, nil);
+    STAssertTrue(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_AfterEventActionsCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } afterEvent:kEvent0];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } afterEvent:kEvent1];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertFalse(action1Called, nil);
+}
+
 - (void)testEventPropertyName_DefaultValue_IsDefault
 {
     STAssertEqualObjects(@"event", machine.eventPropertyName, nil);
