@@ -43,6 +43,7 @@ static NSString * const kStateD = @"stateD";
     
     initial = kStateA;
     machine = [[[CPBStateMachine alloc] initWithState:initial] autorelease];
+    machine.eventPropertyName = @"event";
     
     // [{ event: event0 from: stateA            to: stateB },
     //  { event: event1 from: stateA            to: stateC },
@@ -170,6 +171,7 @@ static NSString * const kStateD = @"stateD";
 - (void)testDispatchEvent_SameEvent3MappedToTwoTransitionsFromStateB_MovesToStateC
 {
     CPBStateMachine *m = [[[CPBStateMachine alloc] initWithState:kStateB] autorelease];
+    m.eventPropertyName = @"event";
     [m mapEventsToTransitions:transitionMatrix];
     [m dispatchEvent:kEvent3];
     [self assertState:kStateC inMachine:m];
@@ -178,6 +180,7 @@ static NSString * const kStateD = @"stateD";
 - (void)testDispatchEvent_SameEvent3MappedToTwoTransitionsFromStateC_MovesToStateB
 {
     CPBStateMachine *m = [[[CPBStateMachine alloc] initWithState:kStateC] autorelease];
+    m.eventPropertyName = @"event";
     [m mapEventsToTransitions:transitionMatrix];
     [m dispatchEvent:kEvent3];
     [self assertState:kStateB inMachine:m];
@@ -186,24 +189,28 @@ static NSString * const kStateD = @"stateD";
 - (void)testDispatchEvent_Event4MappedFromStarToStateA_MovesToStateAFromAnyState
 {
     CPBStateMachine *ma = [[[CPBStateMachine alloc] initWithState:kStateA] autorelease];
+    ma.eventPropertyName = @"event";
     [ma mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateA inMachine:ma];
     [ma dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:ma];
     
     CPBStateMachine *mb = [[[CPBStateMachine alloc] initWithState:kStateB] autorelease];
+    mb.eventPropertyName = @"event";
     [mb mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateB inMachine:mb];
     [mb dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:mb];
     
     CPBStateMachine *mc = [[[CPBStateMachine alloc] initWithState:kStateC] autorelease];
+    mc.eventPropertyName = @"event";
     [mc mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateC inMachine:mc];
     [mc dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:mc];
     
     CPBStateMachine *md = [[[CPBStateMachine alloc] initWithState:kStateD] autorelease];
+    md.eventPropertyName = @"event";
     [md mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateD inMachine:md];
     [md dispatchEvent:kEvent4];

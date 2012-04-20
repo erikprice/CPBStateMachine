@@ -95,7 +95,7 @@
         currentStateInternal_ = initialState;
         self.transitionsInternal = [NSMutableArray array];
         
-        self.eventPropertyName = @"event";
+        self.eventPropertyName = @"eventName";
         self.errorHandler = ^NSString *(id event) {
             
             NSString *eventName = [event valueForKey:self.eventPropertyName];
