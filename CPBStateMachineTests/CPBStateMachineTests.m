@@ -22,11 +22,16 @@ static NSString * const kStateC = @"stateC";
 static NSString * const kStateD = @"stateD";
 
 
+NSString * const kStateMachineCurrentStateChangeSentinel0 = @"StateMachineCurrentStateChange0";
+NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurrentStateChange1";
+
+
 @interface CPBStateMachineTests : SenTestCase
 {
     CPBStateMachine *machine;
     NSString *initial;
     NSMutableArray *transitionMatrix;
+    BOOL currentStateChanged;
 }
 
 - (void)assertState:(NSString *)state inMachine:(CPBStateMachine *)stateMachine;
@@ -60,6 +65,8 @@ static NSString * const kStateD = @"stateD";
     [transitionMatrix addObject:[self transitionForEvent:kEvent3 from:kStateC to:kStateB]];
     [transitionMatrix addObject:[self transitionForEvent:kEvent3 from:kStateD to:kStateC]];
     [transitionMatrix addObject:[self transitionForEvent:kEvent4 from:@"*" to:kStateA]];
+    
+    currentStateChanged = NO;
 }
 
 - (void)testInitWithState_InitialState_CurrentStateIsInitialState
@@ -482,6 +489,53 @@ static NSString * const kStateD = @"stateD";
     
     STAssertTrue(action0Called, nil);
     STAssertFalse(action1Called, nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_CurrentStateChangeNotificationToKeyValueObservers
+{
+    [machine addObserver:self forKeyPath:@"currentState" options:NSKeyValueObservingOptionNew context:kStateMachineCurrentStateChangeSentinel0];
+    [machine mapEventsToTransitions:transitionMatrix];
+
+    [machine dispatchEvent:kEvent0];
+    
+    [machine removeObserver:self forKeyPath:@"currentState"];
+    
+    STAssertTrue(currentStateChanged, nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_NoCurrentStateChangeNotificationToKeyValueObservers
+{
+    // Need to configure the state machine for leniency.
+    machine.errorHandler = ^NSString *(id event) {
+        
+        return nil;
+        
+    };
+    [machine mapEventsToTransitions:transitionMatrix];
+    [machine addObserver:self forKeyPath:@"currentState" options:NSKeyValueObservingOptionNew context:kStateMachineCurrentStateChangeSentinel1];
+
+    [machine dispatchEvent:kEvent2];
+
+    [machine removeObserver:self forKeyPath:@"currentState"];
+    
+    STAssertFalse(currentStateChanged, nil);
+    STAssertEqualObjects(kStateA, machine.currentState, nil);
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (context == kStateMachineCurrentStateChangeSentinel0)
+    {
+        currentStateChanged = YES;
+    }
+    else if (context == kStateMachineCurrentStateChangeSentinel1)
+    {
+        currentStateChanged = YES;
+    }
+    else
+    {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
 }
 
 - (void)testEventPropertyName_DefaultValue_IsDefault
