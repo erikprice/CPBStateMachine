@@ -491,6 +491,38 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action1Called, nil);
 }
 
+- (void)testDispatchEvent_NoActionsRegisteredForEvent_BeforeEventActionsNotCalled
+{
+    __block BOOL action0called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0called = YES;
+        
+    } beforeEvent:kEvent1];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertFalse(action0called, nil);
+}
+
+- (void)testDispatchEvent_NoActionsRegisteredForEvent_AfterEventActionsNotCalled
+{
+    __block BOOL action0called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0called = YES;
+        
+    } afterEvent:kEvent1];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    STAssertFalse(action0called, nil);
+}
+
 - (void)testDispatchEvent_EventPromptsStateTransition_CurrentStateChangeNotificationToKeyValueObservers
 {
     [machine addObserver:self forKeyPath:@"currentState" options:NSKeyValueObservingOptionNew context:kStateMachineCurrentStateChangeSentinel0];
