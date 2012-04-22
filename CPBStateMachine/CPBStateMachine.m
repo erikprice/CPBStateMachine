@@ -25,15 +25,6 @@
 // Maps states to actions to be performed when leaving that state.
 @property (nonatomic, retain) NSMutableDictionary *actionsByLeavingState;
 
-// Maps events to action invocations to be performed after that event.
-@property (nonatomic, retain) NSMutableDictionary *afterEventInvocations;
-// Maps events to action invocations to be performed before that event.
-@property (nonatomic, retain) NSMutableDictionary *beforeEventInvocations;
-// Maps states to action invocations to be performed when entering that state.
-@property (nonatomic, retain) NSMutableDictionary *enteringStateInvocations;
-// Maps states to action invocations to be performed when leaving that state.
-@property (nonatomic, retain) NSMutableDictionary *leavingStateInvocations;
-
 - (void)storeAction:(CPBStateMachineAction)action forKey:(NSString *)key inActionMapping:(NSMutableDictionary *)actionsForKey;
 - (void)storeInvocationForAction:(SEL)actionMethod withTarget:(id)targetObject forKey:(NSString *)key inInvocationMapping:(NSMutableDictionary *)invocationsForKey;
 
@@ -55,11 +46,6 @@
 @synthesize actionsByEnteringState = actionsByEnteringState_;
 @synthesize actionsByLeavingState = actionsByLeavingState_;
 
-@synthesize afterEventInvocations = afterEventInvocations_;
-@synthesize beforeEventInvocations = beforeEventInvocations_;
-@synthesize enteringStateInvocations = enteringStateInvocations_;
-@synthesize leavingStateInvocations = leavingStateInvocations_;
-
 - (void)dealloc
 {
     [currentStateInternal_ release];
@@ -74,11 +60,6 @@
     self.actionsByBeforeEvent = nil;
     self.actionsByEnteringState = nil;
     self.actionsByLeavingState = nil;
-    
-    self.afterEventInvocations = nil;
-    self.beforeEventInvocations = nil;
-    self.enteringStateInvocations = nil;
-    self.leavingStateInvocations = nil;
     
     [super dealloc];
 }
@@ -110,11 +91,6 @@
         self.actionsByBeforeEvent = [NSMutableDictionary dictionary];
         self.actionsByEnteringState = [NSMutableDictionary dictionary];
         self.actionsByLeavingState = [NSMutableDictionary dictionary];
-        
-        self.afterEventInvocations = [NSMutableDictionary dictionary];
-        self.beforeEventInvocations = [NSMutableDictionary dictionary];
-        self.enteringStateInvocations = [NSMutableDictionary dictionary];
-        self.leavingStateInvocations = [NSMutableDictionary dictionary];
     }
     
     return self;
@@ -195,29 +171,9 @@
         action(smEvent, oldState, newState);
     }
 
-    for (NSInvocation *action in [self.beforeEventInvocations objectForKey:eventName])
-    {
-        // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:&smEvent atIndex:2];
-        [action setArgument:&oldState atIndex:3];
-        [action setArgument:&newState atIndex:4];
-        
-        [action invoke];
-    }
-    
     for (CPBStateMachineAction action in [self.actionsByLeavingState objectForKey:oldState])
     {
         action(smEvent, oldState, newState);
-    }
-    
-    for (NSInvocation *action in [self.leavingStateInvocations objectForKey:oldState])
-    {
-        // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:&smEvent atIndex:2];
-        [action setArgument:&oldState atIndex:3];
-        [action setArgument:&newState atIndex:4];
-        
-        [action invoke];
     }
     
     self.currentState = newState;
@@ -227,29 +183,9 @@
         action(smEvent, oldState, newState);
     }
     
-    for (NSInvocation *action in [self.enteringStateInvocations objectForKey:newState])
-    {
-        // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:&smEvent atIndex:2];
-        [action setArgument:&oldState atIndex:3];
-        [action setArgument:&newState atIndex:4];
-        
-        [action invoke];
-    }
-    
     for (CPBStateMachineAction action in [self.actionsByAfterEvent objectForKey:eventName])
     {
         action(smEvent, oldState, newState);
-    }
-    
-    for (NSInvocation *action in [self.afterEventInvocations objectForKey:eventName])
-    {
-        // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:&smEvent atIndex:2];
-        [action setArgument:&oldState atIndex:3];
-        [action setArgument:&newState atIndex:4];
-        
-        [action invoke];
     }
 }
 
@@ -336,22 +272,22 @@
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject afterEvent:(NSString *)eventName
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.afterEventInvocations];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.actionsByAfterEvent];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject beforeEvent:(NSString *)eventName
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.beforeEventInvocations];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.actionsByBeforeEvent];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:toState inInvocationMapping:self.enteringStateInvocations];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:toState inInvocationMapping:self.actionsByEnteringState];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject leavingState:(NSString *)fromState
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:fromState inInvocationMapping:self.leavingStateInvocations];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:fromState inInvocationMapping:self.actionsByLeavingState];
 }
 
 - (NSString *)description
@@ -399,19 +335,24 @@
 
 - (void)storeInvocationForAction:(SEL)actionMethod withTarget:(id)targetObject forKey:(NSString *)key inInvocationMapping:(NSMutableDictionary *)invocationsForKey
 {
-    NSMutableArray *invocations = [invocationsForKey objectForKey:key];
-    if (!invocations)
-    {
-        invocations = [NSMutableArray array];
-        [invocationsForKey setObject:invocations forKey:key];
-    }
-    
     NSMethodSignature *signature = [[targetObject class] instanceMethodSignatureForSelector:actionMethod];
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-    [invocation setSelector:actionMethod];
     [invocation setTarget:targetObject];
-    [invocations addObject:invocation];
+    [invocation setSelector:actionMethod];
     [invocation retainArguments];
+    
+    CPBStateMachineAction action = ^(id event, NSString *oldState, NSString *newState) {
+        
+        // Indices 0 and 1 are for target and selector, so we start with 2.
+        [invocation setArgument:&event atIndex:2];
+        [invocation setArgument:&oldState atIndex:3];
+        [invocation setArgument:&newState atIndex:4];
+        
+        [invocation invoke];
+        
+    };
+    
+    [self storeAction:action forKey:key inActionMapping:invocationsForKey];
 }
 
 @end
