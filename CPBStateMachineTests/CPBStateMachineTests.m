@@ -622,8 +622,8 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     [machine dispatchEvent:kEvent0];
     
     NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent0, @"event", nil];
-    [actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition];
-    [actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition];
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
 }
 
 - (void)testDispatchEvent_EventPromptsStateTransition_EnterStateActionsWithTargetsCalled
