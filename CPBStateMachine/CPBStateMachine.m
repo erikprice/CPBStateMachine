@@ -198,9 +198,9 @@
     for (NSInvocation *action in [self.beforeEventInvocations objectForKey:eventName])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:smEvent atIndex:2];
-        [action setArgument:oldState atIndex:3];
-        [action setArgument:newState atIndex:4];
+        [action setArgument:&smEvent atIndex:2];
+        [action setArgument:&oldState atIndex:3];
+        [action setArgument:&newState atIndex:4];
         
         [action invoke];
     }
@@ -213,9 +213,9 @@
     for (NSInvocation *action in [self.leavingStateInvocations objectForKey:oldState])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:smEvent atIndex:2];
-        [action setArgument:oldState atIndex:3];
-        [action setArgument:newState atIndex:4];
+        [action setArgument:&smEvent atIndex:2];
+        [action setArgument:&oldState atIndex:3];
+        [action setArgument:&newState atIndex:4];
         
         [action invoke];
     }
@@ -230,9 +230,9 @@
     for (NSInvocation *action in [self.enteringStateInvocations objectForKey:newState])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:smEvent atIndex:2];
-        [action setArgument:oldState atIndex:3];
-        [action setArgument:newState atIndex:4];
+        [action setArgument:&smEvent atIndex:2];
+        [action setArgument:&oldState atIndex:3];
+        [action setArgument:&newState atIndex:4];
         
         [action invoke];
     }
@@ -245,9 +245,9 @@
     for (NSInvocation *action in [self.afterEventInvocations objectForKey:eventName])
     {
         // Indices 0 and 1 are for target and selector, so we start with 2.
-        [action setArgument:smEvent atIndex:2];
-        [action setArgument:oldState atIndex:3];
-        [action setArgument:newState atIndex:4];
+        [action setArgument:&smEvent atIndex:2];
+        [action setArgument:&oldState atIndex:3];
+        [action setArgument:&newState atIndex:4];
         
         [action invoke];
     }
@@ -406,8 +406,9 @@
         [invocationsForKey setObject:invocations forKey:key];
     }
     
-    NSMethodSignature *signature = [NSMethodSignature instanceMethodSignatureForSelector:actionMethod];
+    NSMethodSignature *signature = [[targetObject class] instanceMethodSignatureForSelector:actionMethod];
     NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+    [invocation setSelector:actionMethod];
     [invocation setTarget:targetObject];
     [invocations addObject:invocation];
     [invocation retainArguments];

@@ -9,6 +9,7 @@
 #import <SenTestingKit/SenTestingKit.h>
 
 #import "CPBStateMachine.h"
+#import "CPBStateMachineEvent.h"
 
 static NSString * const kEvent0 = @"event0";
 static NSString * const kEvent1 = @"event1";
@@ -26,12 +27,105 @@ NSString * const kStateMachineCurrentStateChangeSentinel0 = @"StateMachineCurren
 NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurrentStateChange1";
 
 
+// This helper class serves as the target in calls to
+// -registerAction:withTarget:*State methods.
+@interface ActionWithTarget : NSObject
+
+@property (nonatomic, retain) NSMutableArray *action0CallHistory;
+@property (nonatomic, retain) NSMutableArray *action1CallHistory;
+
+- (void)action0ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState;
+- (void)action1ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState;
+- (BOOL)assertTransition:(NSDictionary *)transition inActionCallHistory:(NSArray *)callHistory;
+- (BOOL)assertTransitionInAction0CallHistory:(NSDictionary *)transition;
+- (BOOL)assertTransitionInAction1CallHistory:(NSDictionary *)transition;
+
+@end
+
+
+@implementation ActionWithTarget
+
+@synthesize action0CallHistory = action0CallHistory_;
+@synthesize action1CallHistory = action1CallHistory_;
+
+- (void)dealloc
+{
+    self.action0CallHistory = nil;
+    self.action1CallHistory = nil;
+    
+    [super dealloc];
+}
+
+- (id)init
+{
+    if (self = [super init])
+    {
+        self.action0CallHistory = [NSMutableArray array];
+        self.action1CallHistory = [NSMutableArray array];
+    }
+    
+    return self;
+}
+
+- (void)action0ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState
+{
+    NSDictionary *call = [NSDictionary dictionaryWithObjectsAndKeys:fromState, @"fromState", toState, @"toState", event, @"event", nil];
+    [self.action0CallHistory addObject:call];
+}
+
+- (void)action1ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState
+{
+    NSDictionary *call = [NSDictionary dictionaryWithObjectsAndKeys:fromState, @"fromState", toState, @"toState", event, @"event", nil];
+    [self.action1CallHistory addObject:call];
+}
+
+- (BOOL)assertTransition:(NSDictionary *)transition inActionCallHistory:(NSArray *)callHistory
+{
+    for (NSDictionary *t in callHistory)
+    {
+        CPBStateMachineEvent *calledEvent = [t objectForKey:@"event"];
+        NSString *calledFromState = [t objectForKey:@"fromState"];
+        NSString *calledToState = [t objectForKey:@"toState"];
+        
+        if (!(calledEvent && calledFromState && calledToState))
+        {
+            return NO;
+        }
+        
+        if ([calledEvent.eventName isEqualToString:[transition objectForKey:@"event"]]
+            && [calledFromState isEqualToString:[transition objectForKey:@"fromState"]]
+            && [calledToState isEqualToString:[transition objectForKey:@"toState"]])
+        {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
+- (BOOL)assertTransitionInAction0CallHistory:(NSDictionary *)transition
+{
+    return [self assertTransition:transition inActionCallHistory:self.action0CallHistory];
+}
+
+- (BOOL)assertTransitionInAction1CallHistory:(NSDictionary *)transition
+{
+    return [self assertTransition:transition inActionCallHistory:self.action1CallHistory];
+}
+
+@end
+
+
+
+
 @interface CPBStateMachineTests : SenTestCase
 {
     CPBStateMachine *machine;
     NSString *initial;
     NSMutableArray *transitionMatrix;
     BOOL currentStateChanged;
+    ActionWithTarget *actionWithTarget0;
+    ActionWithTarget *actionWithTarget1;
 }
 
 - (void)assertState:(NSString *)state inMachine:(CPBStateMachine *)stateMachine;
@@ -64,6 +158,9 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     [transitionMatrix addObject:[self transitionForEvent:kEvent3 from:kStateC to:kStateB]];
     [transitionMatrix addObject:[self transitionForEvent:kEvent3 from:kStateD to:kStateC]];
     [transitionMatrix addObject:[self transitionForEvent:kEvent4 from:@"*" to:kStateA]];
+    
+    actionWithTarget0 = [[[ActionWithTarget alloc] init] autorelease];
+    actionWithTarget1 = [[[ActionWithTarget alloc] init] autorelease];
     
     currentStateChanged = NO;
 }
@@ -514,6 +611,148 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     [machine dispatchEvent:kEvent0];
     
     STAssertFalse(action0called, nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_LeaveStateActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 leavingState:kStateA];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 leavingState:kStateA];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent0, @"event", nil];
+    [actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition];
+    [actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition];
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_EnterStateActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateB];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateB];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent0, @"event", nil];
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_BeforeEventActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 beforeEvent:kEvent0];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 beforeEvent:kEvent0];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent0, @"event", nil];
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_AfterEventActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 afterEvent:kEvent0];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 afterEvent:kEvent0];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent0, @"event", nil];
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_LeaveStateActionsWithTargetsNotCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 leavingState:kStateB];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 leavingState:kStateA];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_EnterStateActionsWithTargetsNotCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateB];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateC];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+    
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_BeforeEventActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 beforeEvent:kEvent1];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 beforeEvent:kEvent1];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+    
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_EventDoesntPromptStateTransition_AfterEventActionsWithTargetsCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 afterEvent:kEvent1];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 afterEvent:kEvent1];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+    
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_NoActionsWithTargetsRegisteredForEvent_BeforeEventActionsWithTargetsNotCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 beforeEvent:kEvent1];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 beforeEvent:kEvent1];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+    
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_NoActionsWithTargetsRegisteredForEvent_AfterEventActionsWithTargetsNotCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 afterEvent:kEvent1];
+    [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 afterEvent:kEvent1];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent0];
+    
+    NSDictionary *expectedTransition0 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateB, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition0], nil);
+    
+    NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertFalse([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
 }
 
 - (void)testDispatchEvent_CustomEventObject_CustomEventObjectPassedToAction
