@@ -48,7 +48,6 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     
     initial = kStateA;
     machine = [[[CPBStateMachine alloc] initWithState:initial] autorelease];
-    machine.eventPropertyName = @"event";
     
     // [{ event: event0 from: stateA            to: stateB },
     //  { event: event1 from: stateA            to: stateC },
@@ -178,7 +177,6 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 - (void)testDispatchEvent_SameEvent3MappedToTwoTransitionsFromStateB_MovesToStateC
 {
     CPBStateMachine *m = [[[CPBStateMachine alloc] initWithState:kStateB] autorelease];
-    m.eventPropertyName = @"event";
     [m mapEventsToTransitions:transitionMatrix];
     [m dispatchEvent:kEvent3];
     [self assertState:kStateC inMachine:m];
@@ -187,7 +185,6 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 - (void)testDispatchEvent_SameEvent3MappedToTwoTransitionsFromStateC_MovesToStateB
 {
     CPBStateMachine *m = [[[CPBStateMachine alloc] initWithState:kStateC] autorelease];
-    m.eventPropertyName = @"event";
     [m mapEventsToTransitions:transitionMatrix];
     [m dispatchEvent:kEvent3];
     [self assertState:kStateB inMachine:m];
@@ -196,28 +193,24 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 - (void)testDispatchEvent_Event4MappedFromStarToStateA_MovesToStateAFromAnyState
 {
     CPBStateMachine *ma = [[[CPBStateMachine alloc] initWithState:kStateA] autorelease];
-    ma.eventPropertyName = @"event";
     [ma mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateA inMachine:ma];
     [ma dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:ma];
     
     CPBStateMachine *mb = [[[CPBStateMachine alloc] initWithState:kStateB] autorelease];
-    mb.eventPropertyName = @"event";
     [mb mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateB inMachine:mb];
     [mb dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:mb];
     
     CPBStateMachine *mc = [[[CPBStateMachine alloc] initWithState:kStateC] autorelease];
-    mc.eventPropertyName = @"event";
     [mc mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateC inMachine:mc];
     [mc dispatchEvent:kEvent4];
     [self assertState:kStateA inMachine:mc];
     
     CPBStateMachine *md = [[[CPBStateMachine alloc] initWithState:kStateD] autorelease];
-    md.eventPropertyName = @"event";
     [md mapEventsToTransitions:transitionMatrix];
     [self assertState:kStateD inMachine:md];
     [md dispatchEvent:kEvent4];
@@ -538,7 +531,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     
     [machine mapEventsToTransitions:transitionMatrix];
     
-    [machine dispatchEvent:[NSDictionary dictionaryWithObjectsAndKeys:kEvent0, @"event", kTestPrivateData, @"customKey", nil]];
+    [machine dispatchEvent:[NSDictionary dictionaryWithObjectsAndKeys:kEvent0, @"eventName", kTestPrivateData, @"customKey", nil]];
     
     STAssertTrue(actionCalled, nil);
 }
@@ -592,7 +585,25 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 
 - (void)testEventPropertyName_DefaultValue_IsDefault
 {
-    STAssertEqualObjects(@"event", machine.eventPropertyName, nil);
+    STAssertEqualObjects(@"eventName", machine.eventPropertyName, nil);
+}
+
+- (void)testSetEventPropertyName_CustomValue_StateMachineExpectsEventsWithCustomEventPropertyName
+{
+    machine.eventPropertyName = @"customEventPropertyName";
+    [machine mapEvent:kEvent0 from:kStateA to:kStateB];
+    
+    __block BOOL actionCalled = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        actionCalled = YES;
+        
+    } enteringState:kStateB];
+
+    NSDictionary *event = [NSDictionary dictionaryWithObjectsAndKeys:kEvent0, machine.eventPropertyName, nil];
+    [machine dispatchEvent:event];
+    
+    STAssertTrue(actionCalled, nil);
 }
 
 - (void)assertState:(NSString *)state inMachine:(CPBStateMachine *)stateMachine
@@ -602,7 +613,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 
 - (NSDictionary *)transitionForEvent:(NSString *)event from:(id)from to:(NSString *)to
 {
-    return [NSDictionary dictionaryWithObjectsAndKeys:event, @"event", from, @"from", to, @"to", nil];
+    return [NSDictionary dictionaryWithObjectsAndKeys:event, @"eventName", from, @"from", to, @"to", nil];
 }
 
 @end
