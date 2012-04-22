@@ -12,6 +12,13 @@
 @class CPBStateMachineEvent;
 
 
+// An action is a block that is called in response
+// to a state machine transition or event dispatch.
+// It is passed the transition's old and new states,
+// and the event object which prompted the transition.
+// (If the event dispatched was an NSString, then a
+// CPBStateMachineEvent object is synthesized from
+// the string and passed into the action.)
 typedef void(^CPBStateMachineAction)(id event, NSString *fromState, NSString *toState);
 
 // Should return nil if the state machine should skip

@@ -523,6 +523,26 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action0called, nil);
 }
 
+- (void)testDispatchEvent_CustomEventObject_CustomEventObjectPassedToAction
+{
+    static NSString * const kTestPrivateData = @"only known to the custom event object";
+    
+    __block BOOL actionCalled = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        actionCalled = YES;
+        NSDictionary *eventObj = (NSDictionary *)event;
+        STAssertEquals(kTestPrivateData, [eventObj objectForKey:@"customKey"], nil);
+        
+    } enteringState:kStateB];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:[NSDictionary dictionaryWithObjectsAndKeys:kEvent0, @"event", kTestPrivateData, @"customKey", nil]];
+    
+    STAssertTrue(actionCalled, nil);
+}
+
 - (void)testDispatchEvent_EventPromptsStateTransition_CurrentStateChangeNotificationToKeyValueObservers
 {
     [machine addObserver:self forKeyPath:@"currentState" options:NSKeyValueObservingOptionNew context:kStateMachineCurrentStateChangeSentinel0];
