@@ -613,6 +613,30 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action0called, nil);
 }
 
+- (void)testDispatchEvent_EventPromptsStateTransition_EnteringStateFromStateActionCalled
+{
+    __block BOOL action0Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action0Called = YES;
+        
+    } enteringState:kStateC fromState:kStateA];
+    
+    __block BOOL action1Called = NO;
+    [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
+        
+        action1Called = YES;
+        
+    } enteringState:kStateC fromState:kStateB];
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    STAssertTrue(action0Called, nil);
+    STAssertFalse(action1Called, nil);
+}
+
 - (void)testDispatchEvent_EventPromptsStateTransition_LeaveStateActionsWithTargetsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 leavingState:kStateA];
@@ -753,6 +777,19 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     
     NSDictionary *expectedTransition1 = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
     STAssertFalse([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
+}
+
+- (void)testDispatchEvent_EventPromptsStateTransition_EnteringStateFromStateActionsWithTargetCalled
+{
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateC fromState:kStateA];
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateC fromState:kStateB];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:kEvent1];
+    
+    NSDictionary *expectedTransition = [NSDictionary dictionaryWithObjectsAndKeys:kStateA, @"fromState", kStateC, @"toState", kEvent1, @"event", nil];
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
+    STAssertFalse([actionWithTarget1 assertTransitionInAction0CallHistory:expectedTransition], nil);
 }
 
 - (void)testDispatchEvent_CustomEventObject_CustomEventObjectPassedToAction

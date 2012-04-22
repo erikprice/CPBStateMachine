@@ -53,6 +53,7 @@ typedef NSString *(^CPBStateMachineErrorHandler)(id event);
 - (void)registerAction:(CPBStateMachineAction)action beforeEvent:(NSString *)event;
 - (void)registerAction:(CPBStateMachineAction)action enteringState:(NSString *)toState;
 - (void)registerAction:(CPBStateMachineAction)action leavingState:(NSString *)fromState;
+- (void)registerAction:(CPBStateMachineAction)action enteringState:(NSString *)toState fromState:(NSString *)previousState;
 
 // 'actionMethod' must conform to the following method signature:
 // (id event, NSString *fromState, NSString *toState).
@@ -60,5 +61,6 @@ typedef NSString *(^CPBStateMachineErrorHandler)(id event);
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject beforeEvent:(NSString *)eventName;
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState;
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject leavingState:(NSString *)fromState;
+- (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState fromState:(NSString *)previousState;
 
 @end

@@ -270,6 +270,20 @@
     [self storeAction:action forKey:fromState inActionMapping:self.actionsByLeavingState];
 }
 
+- (void)registerAction:(CPBStateMachineAction)action enteringState:(NSString *)toState fromState:(NSString *)previousState
+{
+    CPBStateMachineAction wrappingAction = ^(id event, NSString *oldState, NSString *newState) {
+        
+        if ([oldState isEqualToString:previousState])
+        {
+            action(event, oldState, newState);
+        }
+        
+    };
+    
+    [self registerAction:wrappingAction enteringState:toState];
+}
+
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject afterEvent:(NSString *)eventName
 {
     [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.actionsByAfterEvent];
@@ -288,6 +302,27 @@
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject leavingState:(NSString *)fromState
 {
     [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:fromState inInvocationMapping:self.actionsByLeavingState];
+}
+
+- (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState fromState:(NSString *)previousState
+{
+    // Hack to reuse -storeInvocationForAction rather than
+    // copy/paste its code:
+    NSMutableDictionary *disposableMapping = [NSMutableDictionary dictionaryWithCapacity:1];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:toState inInvocationMapping:disposableMapping];
+    NSArray *mapping = [disposableMapping objectForKey:toState];
+    CPBStateMachineAction action = [mapping objectAtIndex:0];
+    
+    CPBStateMachineAction wrappingAction = ^(id event, NSString *oldState, NSString *newState) {
+        
+        if ([oldState isEqualToString:previousState])
+        {
+            action(event, oldState, newState);
+        }
+        
+    };
+    
+    [self registerAction:wrappingAction enteringState:toState];
 }
 
 - (NSString *)description
