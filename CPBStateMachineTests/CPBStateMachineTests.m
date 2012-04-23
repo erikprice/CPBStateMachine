@@ -389,7 +389,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(actionCalled, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_LeaveStateActionsCalled
+- (void)testRegisterActionLeavingState_DispatchEventPromptsStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -413,7 +413,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_EnterStateActionsCalled
+- (void)testRegisterActionEnteringState_DispatchEventPromptsStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -437,7 +437,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_BeforeEventActionsCalled
+- (void)testRegisterActionBeforeEvent_DispatchEventPromptsStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -461,7 +461,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_AfterEventActionsCalled
+- (void)testRegisterActionAfterEvent_DispatchEventPromptsStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -485,7 +485,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_LeaveStateActionsNotCalled
+- (void)testRegisterActionLeavingState_DispatchEventDoesntPromptStateTransition_ActionsNotCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -509,7 +509,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_EnterStateActionsNotCalled
+- (void)testRegisterActionEnteringState_DispatchEventDoesntPromptStateTransition_ActionsNotCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -533,7 +533,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_BeforeEventActionsCalled
+- (void)testRegisterActionBeforeEvent_DispatchEventDoesntPromptStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -557,7 +557,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_AfterEventActionsCalled
+- (void)testRegisterActionAfterEvent_DispatchEventDoesntPromptStateTransition_ActionsCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -581,7 +581,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action1Called, nil);
 }
 
-- (void)testDispatchEvent_NoActionsRegisteredForEvent_BeforeEventActionsNotCalled
+- (void)testRegisterActionBeforeEvent_NoActionsRegisteredForEvent_ActionsNotCalled
 {
     __block BOOL action0called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -597,7 +597,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action0called, nil);
 }
 
-- (void)testDispatchEvent_NoActionsRegisteredForEvent_AfterEventActionsNotCalled
+- (void)testRegisterActionAfterEvent_NoActionsRegisteredForEvent_ActionsNotCalled
 {
     __block BOOL action0called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -613,7 +613,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action0called, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_EnteringStateFromStateActionCalled
+- (void)testRegisterActionEnteringStateFromState_DispatchEventPromptsStateTransition_ActionCalled
 {
     __block BOOL action0Called = NO;
     [machine registerAction:^(id event, NSString *fromState, NSString *toState) {
@@ -637,7 +637,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse(action1Called, nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_LeaveStateActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetLeavingState_DispatchEventPromptsStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 leavingState:kStateA];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 leavingState:kStateA];
@@ -650,7 +650,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_EnterStateActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetEnteringState_DispatchEventPromptsStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateB];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateB];
@@ -663,7 +663,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_BeforeEventActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetBeforeEvent_DispatchEventPromptsStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 beforeEvent:kEvent0];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 beforeEvent:kEvent0];
@@ -676,7 +676,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_AfterEventActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetAfterEvent_DispatchEventPromptsStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 afterEvent:kEvent0];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 afterEvent:kEvent0];
@@ -689,7 +689,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition], nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_LeaveStateActionsWithTargetsNotCalled
+- (void)testRegisterActionWithTargetLeavingState_DispatchEventDoesntPromptStateTransition_ActionsNotCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 leavingState:kStateB];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 leavingState:kStateA];
@@ -704,7 +704,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_EnterStateActionsWithTargetsNotCalled
+- (void)testRegisterActionWithTargetEnteringState_DispatchEventDoesntPromptStateTransition_ActionsNotCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateB];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateC];
@@ -719,7 +719,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_BeforeEventActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetBeforeEvent_DispatchEventDoesntPromptStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 beforeEvent:kEvent1];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 beforeEvent:kEvent1];
@@ -734,7 +734,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
 }
 
-- (void)testDispatchEvent_EventDoesntPromptStateTransition_AfterEventActionsWithTargetsCalled
+- (void)testRegisterActionWithTargetAfterEvent_DispatchEventDoesntPromptStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 afterEvent:kEvent1];
     [machine registerAction:@selector(action1ForEvent:fromState:toState:) withTarget:actionWithTarget1 afterEvent:kEvent1];
@@ -779,7 +779,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse([actionWithTarget1 assertTransitionInAction1CallHistory:expectedTransition1], nil);
 }
 
-- (void)testDispatchEvent_EventPromptsStateTransition_EnteringStateFromStateActionsWithTargetCalled
+- (void)testRegisterActionWithTargetEnteringStateFromState_DispatchEventPromptsStateTransition_ActionsCalled
 {
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateC fromState:kStateA];
     [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget1 enteringState:kStateC fromState:kStateB];
