@@ -14,8 +14,8 @@
 
 @interface CPBStateMachineEvent : NSObject
 
-@property (nonatomic, retain) NSString *context;
-@property (nonatomic, retain) NSString *eventName;
+@property (nonatomic, retain) id context;
+@property (nonatomic, copy) NSString *eventName;
 @property (nonatomic, retain) CPBStateMachine *stateMachine;
 
 @end
