@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 
 
+extern NSString * const kCPBStateMachineStateInitial;
+
+
 @class CPBStateMachineEvent;
 
 

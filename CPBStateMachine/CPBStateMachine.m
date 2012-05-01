@@ -11,6 +11,9 @@
 #import "CPBStateMachineEvent.h"
 
 
+NSString * const kCPBStateMachineStateInitial = @"initial";
+
+
 @interface CPBStateMachine ()
 
 @property (nonatomic, retain) NSMutableDictionary *transitionsByEvent;
@@ -66,7 +69,7 @@
 
 - (id)init
 {
-    return [self initWithState:nil];
+    return [self initWithState:kCPBStateMachineStateInitial];
 }
 
 - (id)initWithState:(NSString *)initialState

@@ -882,6 +882,13 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertTrue(actionCalled, nil);
 }
 
+- (void)testCurrentState_DefaultInitialState_CPBStateMachineStateInitial
+{
+    CPBStateMachine *sm = [[[CPBStateMachine alloc] init] autorelease];
+    
+    STAssertEqualObjects(kCPBStateMachineStateInitial, sm.currentState, nil);
+}
+
 - (void)assertState:(NSString *)state inMachine:(CPBStateMachine *)stateMachine
 {
     STAssertEqualObjects(state, stateMachine.currentState, nil);
