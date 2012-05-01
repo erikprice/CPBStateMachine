@@ -29,6 +29,10 @@ typedef NSString *(^CPBStateMachineErrorHandler)(id event);
 
 @interface CPBStateMachine : NSObject
 
+// 'currentState' is a useful property for use from outside
+// of transition actions, but actions should rely on the
+// parameters passed to them (as the 'currentState' may have
+// changed before the action was called).
 @property (nonatomic, readonly) NSString *currentState;
 @property (nonatomic, retain) CPBStateMachineErrorHandler errorHandler;
 @property (nonatomic, retain) NSString *eventPropertyName; // Defaults to "event".
