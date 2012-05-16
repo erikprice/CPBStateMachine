@@ -80,10 +80,11 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
         self.transitionsInternal = [NSMutableArray array];
         
         self.eventPropertyName = @"eventName";
+        __block CPBStateMachine *weakself = self;
         self.errorHandler = ^NSString *(id event) {
             
-            NSString *eventName = [event valueForKey:self.eventPropertyName];
-            [NSException raise:@"InvalidStateTransitionException" format:@"No transition registered on current state '%@' for event '%@' in %@", self.currentState, eventName, self];
+            NSString *eventName = [event valueForKey:weakself.eventPropertyName];
+            [NSException raise:@"InvalidStateTransitionException" format:@"No transition registered on current state '%@' for event '%@' in %@", weakself.currentState, eventName, weakself];
             return nil;
             
         };
