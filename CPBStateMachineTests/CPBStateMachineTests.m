@@ -31,27 +31,19 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 // -registerAction:withTarget:*State methods.
 @interface ActionWithTarget : NSObject
 
-@property (nonatomic, retain) NSMutableArray *action0CallHistory;
-@property (nonatomic, retain) NSMutableArray *action1CallHistory;
-
-- (void)action0ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState;
-- (void)action1ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState;
-- (BOOL)assertTransition:(NSDictionary *)transition inActionCallHistory:(NSArray *)callHistory;
-- (BOOL)assertTransitionInAction0CallHistory:(NSDictionary *)transition;
-- (BOOL)assertTransitionInAction1CallHistory:(NSDictionary *)transition;
-
 @end
 
 
 @implementation ActionWithTarget
-
-@synthesize action0CallHistory = action0CallHistory_;
-@synthesize action1CallHistory = action1CallHistory_;
+{
+    NSMutableArray *_action0CallHistory;
+    NSMutableArray *_action1CallHistory;
+}
 
 - (void)dealloc
 {
-    self.action0CallHistory = nil;
-    self.action1CallHistory = nil;
+    [_action0CallHistory release];
+    [_action1CallHistory release];
     
     [super dealloc];
 }
@@ -60,8 +52,8 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 {
     if (self = [super init])
     {
-        self.action0CallHistory = [NSMutableArray array];
-        self.action1CallHistory = [NSMutableArray array];
+        _action0CallHistory = [[NSMutableArray alloc] init];
+        _action1CallHistory = [[NSMutableArray alloc] init];
     }
     
     return self;
@@ -70,13 +62,13 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 - (void)action0ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState
 {
     NSDictionary *call = [NSDictionary dictionaryWithObjectsAndKeys:fromState, @"fromState", toState, @"toState", event, @"event", nil];
-    [self.action0CallHistory addObject:call];
+    [_action0CallHistory addObject:call];
 }
 
 - (void)action1ForEvent:(id)event fromState:(NSString *)fromState toState:(NSString *)toState
 {
     NSDictionary *call = [NSDictionary dictionaryWithObjectsAndKeys:fromState, @"fromState", toState, @"toState", event, @"event", nil];
-    [self.action1CallHistory addObject:call];
+    [_action1CallHistory addObject:call];
 }
 
 - (BOOL)assertTransition:(NSDictionary *)transition inActionCallHistory:(NSArray *)callHistory
@@ -105,12 +97,12 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 
 - (BOOL)assertTransitionInAction0CallHistory:(NSDictionary *)transition
 {
-    return [self assertTransition:transition inActionCallHistory:self.action0CallHistory];
+    return [self assertTransition:transition inActionCallHistory:_action0CallHistory];
 }
 
 - (BOOL)assertTransitionInAction1CallHistory:(NSDictionary *)transition
 {
-    return [self assertTransition:transition inActionCallHistory:self.action1CallHistory];
+    return [self assertTransition:transition inActionCallHistory:_action1CallHistory];
 }
 
 @end
@@ -127,9 +119,6 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     ActionWithTarget *actionWithTarget0;
     ActionWithTarget *actionWithTarget1;
 }
-
-- (void)assertState:(NSString *)state inMachine:(CPBStateMachine *)stateMachine;
-- (NSDictionary *)transitionForEvent:(NSString *)event from:(id)from to:(NSString *)to;
 
 @end
 

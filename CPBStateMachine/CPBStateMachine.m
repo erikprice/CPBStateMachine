@@ -14,55 +14,42 @@
 NSString * const kCPBStateMachineStateInitial = @"initial";
 
 
-@interface CPBStateMachine ()
-
-@property (nonatomic, retain) NSMutableDictionary *transitionsByEvent;
-@property (nonatomic, retain) NSMutableArray *transitionsInternal;
-
-// Maps events to actions to be performed after that event.
-@property (nonatomic, retain) NSMutableDictionary *actionsByAfterEvent;
-// Maps events to actions to be performed before that event.
-@property (nonatomic, retain) NSMutableDictionary *actionsByBeforeEvent;
-// Maps states to actions to be performed when entering that state.
-@property (nonatomic, retain) NSMutableDictionary *actionsByEnteringState;
-// Maps states to actions to be performed when leaving that state.
-@property (nonatomic, retain) NSMutableDictionary *actionsByLeavingState;
-
-- (void)storeAction:(CPBStateMachineAction)action forKey:(NSString *)key inActionMapping:(NSMutableDictionary *)actionsForKey;
-- (void)storeInvocationForAction:(SEL)actionMethod withTarget:(id)targetObject forKey:(NSString *)key inInvocationMapping:(NSMutableDictionary *)invocationsForKey;
-
-@end
-
-
 @implementation CPBStateMachine
+{
+    // Each element is a mapping from one state to another for a given event.
+    NSMutableArray *_transitions;
+    
+    // Lookup table for all transitions for a given event.
+    NSMutableDictionary *_transitionsByEvent;
 
-@synthesize currentState = currentStateInternal_;
-@synthesize eventPropertyName = eventPropertyName_;
-@synthesize errorHandler = errorHandler_;
-@dynamic transitions;
-@synthesize transitionsInternal = transitionsInternal_;
+    // Maps events to actions to be performed after that event.
+    NSMutableDictionary *_actionsByAfterEvent;
+    
+    // Maps events to actions to be performed before that event.
+    NSMutableDictionary *_actionsByBeforeEvent;
+    
+    // Maps states to actions to be performed when entering that state.
+    NSMutableDictionary *_actionsByEnteringState;
+    
+    // Maps states to actions to be performed when leaving that state.
+    NSMutableDictionary *_actionsByLeavingState;
+}
 
-@synthesize transitionsByEvent = transitionsByEvent_;
-
-@synthesize actionsByAfterEvent = actionsByAfterEvent_;
-@synthesize actionsByBeforeEvent = actionsByBeforeEvent_;
-@synthesize actionsByEnteringState = actionsByEnteringState_;
-@synthesize actionsByLeavingState = actionsByLeavingState_;
 
 - (void)dealloc
 {
-    [currentStateInternal_ release];
+    [_currentState release];
     
     self.errorHandler = nil;
     self.eventPropertyName = nil;
     
-    self.transitionsByEvent = nil;
-    self.transitionsInternal = nil;
+    [_transitionsByEvent release];
+    [_transitions release];
     
-    self.actionsByAfterEvent = nil;
-    self.actionsByBeforeEvent = nil;
-    self.actionsByEnteringState = nil;
-    self.actionsByLeavingState = nil;
+    [_actionsByAfterEvent release];
+    [_actionsByBeforeEvent release];
+    [_actionsByEnteringState release];
+    [_actionsByLeavingState release];
     
     [super dealloc];
 }
@@ -76,10 +63,12 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
 {
     if (self = [super init])
     {
-        currentStateInternal_ = initialState;
-        self.transitionsInternal = [NSMutableArray array];
+        _currentState = [initialState retain];
+        _transitions = [[NSMutableArray alloc] init];
+        _transitionsByEvent = [[NSMutableDictionary alloc] init];
         
         self.eventPropertyName = @"eventName";
+        
         __block CPBStateMachine *weakself = self;
         self.errorHandler = ^NSString *(id event) {
             
@@ -89,12 +78,10 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
             
         };
         
-        self.transitionsByEvent = [NSMutableDictionary dictionary];
-        
-        self.actionsByAfterEvent = [NSMutableDictionary dictionary];
-        self.actionsByBeforeEvent = [NSMutableDictionary dictionary];
-        self.actionsByEnteringState = [NSMutableDictionary dictionary];
-        self.actionsByLeavingState = [NSMutableDictionary dictionary];
+        _actionsByAfterEvent = [[NSMutableDictionary alloc] init];
+        _actionsByBeforeEvent = [[NSMutableDictionary alloc] init];
+        _actionsByEnteringState = [[NSMutableDictionary alloc] init];
+        _actionsByLeavingState = [[NSMutableDictionary alloc] init];
     }
     
     return self;
@@ -104,27 +91,21 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
 {
     [self willChangeValueForKey:@"currentState"];
     
-    if (currentStateInternal_ != newState)
+    if (_currentState != newState)
     {
         [newState retain];
-        NSString *oldState = currentStateInternal_;
-        currentStateInternal_ = newState;
+        NSString *oldState = _currentState;
+        _currentState = newState;
         [oldState release];
     }
     
     [self didChangeValueForKey:@"currentState"];
 }
 
-- (void)setErrorHandler:(CPBStateMachineErrorHandler)errorHandler
-{
-    [errorHandler_ release];
-    errorHandler_ = [errorHandler copy];
-}
-
 - (NSArray *)transitions
 {
-    NSMutableArray *ret = [[[NSMutableArray alloc] initWithCapacity:[self.transitionsInternal count]] autorelease];
-    for (NSDictionary *transition in self.transitionsInternal)
+    NSMutableArray *ret = [NSMutableArray arrayWithCapacity:[_transitions count]];
+    for (NSDictionary *transition in _transitions)
     {
         NSDictionary *transitionCopy = [transition copy];
         [ret addObject:transitionCopy];
@@ -149,7 +130,7 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
         eventName = [smEvent valueForKey:self.eventPropertyName];
     }
     
-    NSDictionary *transitionsForEvent = [self.transitionsByEvent objectForKey:eventName];
+    NSDictionary *transitionsForEvent = [_transitionsByEvent objectForKey:eventName];
     NSDictionary *transitionForCurrentState = [transitionsForEvent objectForKey:self.currentState];
     if (!transitionForCurrentState)
     {
@@ -170,24 +151,24 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
     NSString *newState = [transitionForCurrentState objectForKey:@"to"];
     NSString *oldState = self.currentState;
     
-    for (CPBStateMachineAction action in [self.actionsByBeforeEvent objectForKey:eventName])
+    for (CPBStateMachineAction action in [_actionsByBeforeEvent objectForKey:eventName])
     {
         action(smEvent, oldState, newState);
     }
 
-    for (CPBStateMachineAction action in [self.actionsByLeavingState objectForKey:oldState])
+    for (CPBStateMachineAction action in [_actionsByLeavingState objectForKey:oldState])
     {
         action(smEvent, oldState, newState);
     }
     
     self.currentState = newState;
     
-    for (CPBStateMachineAction action in [self.actionsByEnteringState objectForKey:newState])
+    for (CPBStateMachineAction action in [_actionsByEnteringState objectForKey:newState])
     {
         action(smEvent, oldState, newState);
     }
     
-    for (CPBStateMachineAction action in [self.actionsByAfterEvent objectForKey:eventName])
+    for (CPBStateMachineAction action in [_actionsByAfterEvent objectForKey:eventName])
     {
         action(smEvent, oldState, newState);
     }
@@ -226,12 +207,12 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
     
     NSString *fromState = (NSString *)fromStateOrStates;
     NSDictionary *transition = [NSDictionary dictionaryWithObjectsAndKeys:eventName, self.eventPropertyName, fromState, @"from", toState, @"to", nil];
-    [self.transitionsInternal addObject:transition];
-    NSMutableDictionary *transitionsForEvent = [self.transitionsByEvent objectForKey:eventName];
+    [_transitions addObject:transition];
+    NSMutableDictionary *transitionsForEvent = [_transitionsByEvent objectForKey:eventName];
     if (!transitionsForEvent)
     {
         transitionsForEvent = [NSMutableDictionary dictionary];
-        [self.transitionsByEvent setObject:transitionsForEvent forKey:eventName];
+        [_transitionsByEvent setObject:transitionsForEvent forKey:eventName];
     }
     
     [transitionsForEvent setObject:transition forKey:fromState];
@@ -256,22 +237,22 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
 
 - (void)registerAction:(CPBStateMachineAction)action afterEvent:(NSString *)event
 {
-    [self storeAction:action forKey:event inActionMapping:self.actionsByAfterEvent];
+    [self storeAction:action forKey:event inActionMapping:_actionsByAfterEvent];
 }
 
 - (void)registerAction:(CPBStateMachineAction)action beforeEvent:(NSString *)event
 {
-    [self storeAction:action forKey:event inActionMapping:self.actionsByBeforeEvent];
+    [self storeAction:action forKey:event inActionMapping:_actionsByBeforeEvent];
 }
 
 - (void)registerAction:(CPBStateMachineAction)action enteringState:(NSString *)toState
 {
-    [self storeAction:action forKey:toState inActionMapping:self.actionsByEnteringState];
+    [self storeAction:action forKey:toState inActionMapping:_actionsByEnteringState];
 }
 
 - (void)registerAction:(CPBStateMachineAction)action leavingState:(NSString *)fromState
 {
-    [self storeAction:action forKey:fromState inActionMapping:self.actionsByLeavingState];
+    [self storeAction:action forKey:fromState inActionMapping:_actionsByLeavingState];
 }
 
 - (void)registerAction:(CPBStateMachineAction)action enteringState:(NSString *)toState fromState:(NSString *)previousState
@@ -290,22 +271,22 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject afterEvent:(NSString *)eventName
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.actionsByAfterEvent];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:_actionsByAfterEvent];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject beforeEvent:(NSString *)eventName
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:self.actionsByBeforeEvent];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:eventName inInvocationMapping:_actionsByBeforeEvent];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:toState inInvocationMapping:self.actionsByEnteringState];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:toState inInvocationMapping:_actionsByEnteringState];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject leavingState:(NSString *)fromState
 {
-    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:fromState inInvocationMapping:self.actionsByLeavingState];
+    [self storeInvocationForAction:actionMethod withTarget:targetObject forKey:fromState inInvocationMapping:_actionsByLeavingState];
 }
 
 - (void)registerAction:(SEL)actionMethod withTarget:(id)targetObject enteringState:(NSString *)toState fromState:(NSString *)previousState
@@ -335,10 +316,10 @@ NSString * const kCPBStateMachineStateInitial = @"initial";
     
     [desc appendFormat:@" currentState: %@;", self.currentState];
     
-    NSMutableString *table = [NSMutableString stringWithString:@" transitionsByEvent:\n"];
-    for (NSString *eventName in self.transitionsByEvent)
+    NSMutableString *table = [NSMutableString stringWithString:@" _transitionsByEvent:\n"];
+    for (NSString *eventName in _transitionsByEvent)
     {
-        NSDictionary *transitionsForEvent = [self.transitionsByEvent objectForKey:eventName];
+        NSDictionary *transitionsForEvent = [_transitionsByEvent objectForKey:eventName];
         for (NSString *fromState in transitionsForEvent)
         {
             NSDictionary *transition = [transitionsForEvent objectForKey:fromState];

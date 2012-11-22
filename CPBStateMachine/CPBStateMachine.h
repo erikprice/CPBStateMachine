@@ -37,8 +37,8 @@ typedef NSString *(^CPBStateMachineErrorHandler)(id event);
 // parameters passed to them (as the 'currentState' may have
 // changed before the action was called).
 @property (nonatomic, readonly) NSString *currentState;
-@property (nonatomic, retain) CPBStateMachineErrorHandler errorHandler;
-@property (nonatomic, retain) NSString *eventPropertyName; // Defaults to "eventName".
+@property (nonatomic, copy) CPBStateMachineErrorHandler errorHandler;
+@property (nonatomic, copy) NSString *eventPropertyName; // Defaults to "eventName".
 @property (nonatomic, readonly) NSArray *transitions;
 
 - (id)initWithState:(NSString *)initialState;
