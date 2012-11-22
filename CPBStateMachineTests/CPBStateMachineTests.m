@@ -348,6 +348,44 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     [self assertState:kStateA inMachine:machine];
 }
 
+- (void)testDispatchStringEvent_ErrorOccurs_EventPassedToErrorHandler
+{
+    __block BOOL errorHandlerCalled = NO;
+    machine.errorHandler = ^NSString *(id event) {
+        
+        errorHandlerCalled = YES;
+        STAssertEqualObjects(kEvent3, [event valueForKey:machine.eventPropertyName], nil);
+        return nil;
+        
+    };
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    [machine dispatchEvent:kEvent3];
+    
+    STAssertTrue(errorHandlerCalled, nil);
+}
+
+- (void)testDispatchCustomEvent_ErrorOccurs_EventPassedToErrorHandler
+{
+    static NSString * const customKey = @"customKey";
+    static NSString * const customValue = @"customValue";
+    __block BOOL errorHandlerCalled = NO;
+    machine.errorHandler = ^NSString *(id event) {
+        
+        errorHandlerCalled = YES;
+        STAssertEqualObjects(kEvent3, [event valueForKey:machine.eventPropertyName], nil);
+        STAssertEqualObjects(customValue, [event valueForKey:customKey], nil);
+        return nil;
+        
+    };
+    
+    [machine mapEventsToTransitions:transitionMatrix];
+    NSDictionary *customEvent = @{ machine.eventPropertyName: kEvent3, customKey: customValue };
+    [machine dispatchEvent:customEvent];
+    
+    STAssertTrue(errorHandlerCalled, nil);
+}
+
 - (void)testDispatchEvent_NoTransitionRegistered_ErrorHandlerReturnValueUpdatesCurrentState
 {
     machine.errorHandler = ^NSString *(id event) {
