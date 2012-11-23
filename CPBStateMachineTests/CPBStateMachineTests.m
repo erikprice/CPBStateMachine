@@ -75,7 +75,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
 {
     for (NSDictionary *t in callHistory)
     {
-        CPBStateMachineEvent *calledEvent = [t objectForKey:@"event"];
+        id calledEvent = [t objectForKey:@"event"];
         NSString *calledFromState = [t objectForKey:@"fromState"];
         NSString *calledToState = [t objectForKey:@"toState"];
         
@@ -84,9 +84,25 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
             return NO;
         }
         
-        if ([calledEvent.eventName isEqualToString:[transition objectForKey:@"event"]]
-            && [calledFromState isEqualToString:[transition objectForKey:@"fromState"]]
-            && [calledToState isEqualToString:[transition objectForKey:@"toState"]])
+        BOOL found = YES;
+        found = found && [calledFromState isEqualToString:[transition objectForKey:@"fromState"]];
+        found = found && [calledToState isEqualToString:[transition objectForKey:@"toState"]];
+        
+        // Only cast to CPBStateMachineEvent if it is a a CPBStateMachineEvent
+        // (not even a subclass). If not, it must be a custom event.
+        if ([calledEvent isMemberOfClass:[CPBStateMachineEvent class]])
+        {
+            CPBStateMachineEvent *event = calledEvent;
+            found = found && [event.eventName isEqualToString:[transition objectForKey:@"event"]];
+        }
+        else
+        {
+            // calledEvent is a custom event, we can test its identity against
+            // the event object passed in the transition.
+            found = found && [transition objectForKey:@"event"] == calledEvent;
+        }
+        
+        if (found)
         {
             return YES;
         }
@@ -819,7 +835,7 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     STAssertFalse([actionWithTarget1 assertTransitionInAction0CallHistory:expectedTransition], nil);
 }
 
-- (void)testDispatchEvent_CustomEventObject_CustomEventObjectPassedToAction
+- (void)testDispatchEvent_DispatchCustomEventObject_CustomEventObjectPassedToAction
 {
     static NSString * const kTestPrivateData = @"only known to the custom event object";
     
@@ -837,6 +853,20 @@ NSString * const kStateMachineCurrentStateChangeSentinel1 = @"StateMachineCurren
     [machine dispatchEvent:[NSDictionary dictionaryWithObjectsAndKeys:kEvent0, @"eventName", kTestPrivateData, @"customKey", nil]];
     
     STAssertTrue(actionCalled, nil);
+}
+
+- (void)testDispatchEvent_DispatchCustomEventObject_CustomEventObjectPassedToActionWithTarget
+{
+    static NSString * const kTestPrivateData = @"only known to the custom event object";
+    NSDictionary *customEvent = @{ @"eventName": kEvent0, @"customKey": kTestPrivateData };
+
+    [machine registerAction:@selector(action0ForEvent:fromState:toState:) withTarget:actionWithTarget0 enteringState:kStateB];
+    [machine mapEventsToTransitions:transitionMatrix];
+    
+    [machine dispatchEvent:customEvent];
+    
+    NSDictionary *expectedTransition = @{ @"fromState": kStateA, @"toState": kStateB, @"event": customEvent };
+    STAssertTrue([actionWithTarget0 assertTransitionInAction0CallHistory:expectedTransition], nil);
 }
 
 - (void)testDispatchEvent_EventPromptsStateTransition_CurrentStateChangeNotificationToKeyValueObservers
